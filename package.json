@@ -7,6 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node seed.js",
+    "redis:up": "docker compose up -d redis",
     "test": "jest --forceExit --detectOpenHandles --testTimeout=30000"
   },
   "dependencies": {

@@ -6,29 +6,48 @@ const logger = require('./logger');
 let client = null;
 let isReady = false;
 
+/** Prefer 127.0.0.1 over localhost so Node does not resolve to ::1 (IPv6) while Redis listens on IPv4 only. */
+const DEFAULT_REDIS_URL = 'redis://127.0.0.1:6379';
+
 async function getRedisClient() {
   if (client && isReady) return client;
 
-  const url = process.env.REDIS_URL || 'redis://localhost:6379';
+  const url = process.env.REDIS_URL || DEFAULT_REDIS_URL;
 
-  client = createClient({ url });
+  const newClient = createClient({
+    url,
+    socket: {
+      reconnectStrategy: (retries) => {
+        if (retries > 8) return false;
+        return Math.min(retries * 100, 2000);
+      },
+    },
+  });
 
-  client.on('error', (err) => {
+  newClient.on('error', (err) => {
     logger.warn({ err: err.message }, 'Redis error');
     isReady = false;
   });
 
-  client.on('ready', () => {
+  newClient.on('ready', () => {
     isReady = true;
     logger.info('Redis connected');
   });
 
-  client.on('end', () => {
+  newClient.on('end', () => {
     isReady = false;
   });
 
-  await client.connect();
-  return client;
+  try {
+    await newClient.connect();
+    client = newClient;
+    return client;
+  } catch (err) {
+    await newClient.quit().catch(() => {});
+    client = null;
+    isReady = false;
+    throw err;
+  }
 }
 
 async function getRedisStatus() {
