@@ -84,10 +84,20 @@ async function generateAnswer(question, docs, confidence) {
     { role: 'user', content: question },
   ]);
 
+  // Only include IDs that actually exist in the retrieved set — prevents the LLM
+  // from hallucinating doc IDs it never saw, which would confuse any client
+  // trying to fetch the source documents
+  const validIds = new Set(docs.map((d) => d._id.toString()));
+  const sanitizedSources = (result.sources || []).filter((id) => validIds.has(id));
+
+  // If the LLM answered but cited nothing, fall back to all retrieved IDs —
+  // better to over-attribute than to return an answer with no traceable source
+  const sources = sanitizedSources.length > 0 ? sanitizedSources : docs.map((d) => d._id.toString());
+
   // Retrieval confidence overrides whatever the LLM returned — belt and suspenders
   return {
     answer: result.answer,
-    sources: result.sources,
+    sources,
     confidence, // always from retrieval, never from LLM output
   };
 }

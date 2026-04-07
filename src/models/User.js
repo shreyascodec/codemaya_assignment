@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true }, // bcrypt hash — never return this field
+    password: { type: String, required: true, select: false }, // never returned unless explicitly .select('+password')
     createdAt: { type: Date, default: Date.now },
   },
   { versionKey: false }

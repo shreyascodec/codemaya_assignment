@@ -1,7 +1,8 @@
 'use strict';
 
 const rateLimit = require('express-rate-limit');
-const RedisStore = require('rate-limit-redis');
+// rate-limit-redis v4 ships as an ESM/CJS dual package — named export, not default
+const { RedisStore } = require('rate-limit-redis');
 const { getRedisClient } = require('../config/redis');
 const logger = require('../config/logger');
 

@@ -40,7 +40,7 @@ async function login(req, res, next) {
       return res.status(400).json({ error: 'email and password are required' });
     }
 
-    // Select password back explicitly — schema strips it from toJSON by default
+    // Password has select:false on the schema — must explicitly opt in for the compare
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       // Same message for "wrong email" and "wrong password" to avoid user enumeration
