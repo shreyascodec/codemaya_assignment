@@ -14,7 +14,6 @@ async function getRedisClient() {
   client = createClient({ url });
 
   client.on('error', (err) => {
-    // Don't crash on Redis connection errors — rate limiting falls back to memory store
     logger.warn({ err: err.message }, 'Redis error');
     isReady = false;
   });

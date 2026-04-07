@@ -7,7 +7,6 @@ const { ask, history } = require('../controllers/askController');
 
 const router = Router();
 
-// Auth runs before rate limiting so we can key the limiter on req.user.id
 router.use(authenticate);
 router.use(rateLimiterMiddleware);
 

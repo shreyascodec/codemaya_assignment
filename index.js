@@ -33,7 +33,6 @@ app.use(errorHandler);
 
 async function start() {
   await connectDB();
-  // Build rate limiter after DB is up so Redis connection failures don't block startup
   await buildRateLimiter();
 
   const port = parseInt(process.env.PORT || '3000', 10);
@@ -42,7 +41,6 @@ async function start() {
   });
 }
 
-// Allow importing app in tests without triggering the full start() lifecycle
 if (require.main === module) {
   start().catch((err) => {
     logger.error({ err: err.message }, 'Fatal startup error');

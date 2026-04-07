@@ -21,11 +21,9 @@ async function register(req, res, next) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    // 12 rounds — slow enough to resist brute-force, fast enough to not time out
     const hashed = await bcrypt.hash(password, 12);
     const user = await User.create({ email, password: hashed });
 
-    // toJSON() strips the password field — defined on the model schema
     res.status(201).json({ user: user.toJSON() });
   } catch (err) {
     next(err);
@@ -40,10 +38,8 @@ async function login(req, res, next) {
       return res.status(400).json({ error: 'email and password are required' });
     }
 
-    // Password has select:false on the schema — must explicitly opt in for the compare
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      // Same message for "wrong email" and "wrong password" to avoid user enumeration
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 

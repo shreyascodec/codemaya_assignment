@@ -5,14 +5,12 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, select: false }, // never returned unless explicitly .select('+password')
+    password: { type: String, required: true }, 
     createdAt: { type: Date, default: Date.now },
   },
   { versionKey: false }
 );
 
-// Explicitly exclude password from any toJSON() call so it can't accidentally
-// leak into a response even if someone does res.json(user)
 userSchema.set('toJSON', {
   transform: (_doc, ret) => {
     delete ret.password;

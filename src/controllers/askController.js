@@ -17,10 +17,8 @@ async function ask(req, res, next) {
 
     const trimmedQuestion = question.trim();
 
-    // Retrieval first — confidence comes from here, not from the LLM
     const { docs, confidence } = await retrieveDocuments(trimmedQuestion);
 
-    // Short-circuit if corpus is empty — no point calling the LLM with no context
     if (docs.length === 0) {
       return res.json({
         answer: "I don't have information about that in my knowledge base.",
@@ -33,18 +31,16 @@ async function ask(req, res, next) {
 
     const latencyMs = Date.now() - start;
 
-    // Structured log — shipped to whatever sink pino is configured for
     logger.info({
       event: 'ask',
       requestId: req.requestId,
       userId: req.user.id,
-      question: trimmedQuestion.slice(0, 80), // truncate so logs don't bloat
+      question: trimmedQuestion.slice(0, 80), 
       latencyMs,
-      confidence: result.confidence,
+      confidence: result.confidence,  
       sourceCount: result.sources.length,
     });
 
-    // Persist to history async — don't await so it doesn't add latency to the response
     saveHistory({
       userId: req.user.id,
       question: trimmedQuestion,

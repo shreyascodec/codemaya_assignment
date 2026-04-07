@@ -2,9 +2,6 @@
 
 const logger = require('../config/logger');
 
-// Central error handler — must be registered LAST in the Express chain.
-// Only the message goes to the client; stack traces stay in the logs.
-// eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, _next) {
   const status = err.status || err.statusCode || 500;
 
@@ -15,7 +12,6 @@ function errorHandler(err, req, res, _next) {
     status,
     err: {
       message: err.message,
-      // Include stack in logs always — just never in the response
       stack: err.stack,
     },
   });

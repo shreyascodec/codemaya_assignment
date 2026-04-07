@@ -1,13 +1,11 @@
 'use strict';
 
-// Mock OpenAI before any module that imports it is loaded.
-// withStructuredOutput returns a chain — we just need it to resolve to a valid shape.
 jest.mock('@langchain/openai', () => ({
   ChatOpenAI: jest.fn().mockImplementation(() => ({
     withStructuredOutput: jest.fn().mockReturnValue({
       invoke: jest.fn().mockResolvedValue({
         answer: 'Refunds are processed within 5–7 business days to the original payment method.',
-        sources: [],   // filled in by our override anyway
+        sources: [],   
         confidence: 'high',
       }),
     }),
@@ -20,7 +18,6 @@ const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-// Connect before requiring the app so MONGODB_URI is already set
 let mongoServer;
 let app;
 
@@ -28,7 +25,6 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongoServer.getUri();
 
-  // Seed a couple of documents so retrieval actually finds something
   const { connectDB } = require('../src/config/db');
   await connectDB();
 
@@ -46,12 +42,10 @@ beforeAll(async () => {
     },
   ]);
 
-  // Seed a test user
   const User = require('../src/models/User');
-  const hash = await bcrypt.hash('testpassword123', 10); // 10 rounds — fast for tests
+  const hash = await bcrypt.hash('testpassword123', 10); 
   await User.create({ email: 'test@example.com', password: hash });
 
-  // Build rate limiter (uses MemoryStore in test env)
   const { buildRateLimiter } = require('../src/middleware/rateLimiter');
   await buildRateLimiter();
 
@@ -63,7 +57,6 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
-// Generate a valid JWT directly — no need to go through /api/auth/login for every test
 function makeToken(payload = {}) {
   return jwt.sign(
     { id: new mongoose.Types.ObjectId().toString(), email: 'test@example.com', ...payload },
@@ -90,7 +83,6 @@ describe('POST /api/ask', () => {
       confidence: expect.stringMatching(/^(high|medium|low)$/),
     });
 
-    // X-Request-Id should always be present
     expect(res.headers['x-request-id']).toBeDefined();
   });
 
@@ -126,13 +118,10 @@ describe('POST /api/ask', () => {
   });
 
   test('triggers 429 after exceeding rate limit', async () => {
-    // Use a unique user ID so this test doesn't interfere with others
     const token = makeToken({ id: new mongoose.Types.ObjectId().toString() });
     const headers = { Authorization: `Bearer ${token}` };
     const body = { question: 'What is the refund policy?' };
 
-    // Fire 11 requests in series — the 11th should hit the limit
-    // MemoryStore in test mode is synchronous enough that this is reliable
     let lastResponse;
     for (let i = 0; i < 11; i++) {
       lastResponse = await request(app).post('/api/ask').set(headers).send(body);

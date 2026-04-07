@@ -13,10 +13,9 @@ function authenticate(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload; // { id, email, iat, exp }
+    req.user = payload; 
     next();
   } catch (err) {
-    // Don't leak whether the token was expired vs tampered — same 401 for both
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }

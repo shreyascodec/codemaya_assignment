@@ -20,10 +20,9 @@ git clone <repo-url>
 cd smart-qa-api
 npm install
 cp .env.example .env
-# Fill in MONGODB_URI, OPENAI_API_KEY, JWT_SECRET, REDIS_URL in .env
 
-npm run seed    # drops and re-inserts the 8 knowledge base documents
-npm start       # starts on PORT (default 3000)
+npm run seed    
+npm start       
 ```
 
 ---
