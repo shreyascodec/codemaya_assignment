@@ -113,7 +113,10 @@ async function retrieveDocuments(question, topN = 3) {
     .slice(0, topN);
 
   const topScore = reRanked[0]?.keywordScore || 0;
-  const confidence = topScore > 0.6 ? 'high' : topScore > 0.3 ? 'medium' : 'low';
+  // Raw TF-weighted sums are usually well below 1 (long docs dilute term frequency).
+  // Thresholds 0.6 / 0.3 were unrealistically high — strong in-domain matches often land ~0.1–0.2.
+  const confidence =
+    topScore > 0.35 ? 'high' : topScore > 0.12 ? 'medium' : 'low';
 
   return { docs: reRanked.map((r) => r.doc), confidence, topScore };
 }
