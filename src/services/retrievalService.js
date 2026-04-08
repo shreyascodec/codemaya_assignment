@@ -112,13 +112,18 @@ async function retrieveDocuments(question, topN = 3) {
     .sort((a, b) => b.finalScore - a.finalScore)
     .slice(0, topN);
 
-  const topScore = reRanked[0]?.keywordScore || 0;
-  // Raw TF-weighted sums are usually well below 1 (long docs dilute term frequency).
-  // Thresholds 0.6 / 0.3 were unrealistically high — strong in-domain matches often land ~0.1–0.2.
+  const topKw = reRanked[0]?.keywordScore || 0;
+  const topFinal = reRanked[0]?.finalScore || 0;
+  // TF keyword scores stay < ~0.2 for most queries; combine with reranked score (trigram overlap).
+  // High = strong lexical + overlap — typical good in-KB answers land here.
   const confidence =
-    topScore > 0.35 ? 'high' : topScore > 0.12 ? 'medium' : 'low';
+    topKw >= 0.13 || topFinal >= 0.13
+      ? 'high'
+      : topKw >= 0.06 || topFinal >= 0.07
+        ? 'medium'
+        : 'low';
 
-  return { docs: reRanked.map((r) => r.doc), confidence, topScore };
+  return { docs: reRanked.map((r) => r.doc), confidence, topScore: topKw };
 }
 
 module.exports = { retrieveDocuments };
